@@ -7,11 +7,13 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
+  // Handle input change for form fields
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  // Validate form data before submission
   const validateForm = () => {
     const newErrors = {};
     if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
@@ -24,11 +26,13 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
       try {
-        const response = await fetch("http://localhost:8080/api/auth/login", {
+        // Make API call for login
+        const response = await fetch("http://localhost:5000/api/user/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: formData.email, password: formData.password }),
@@ -36,11 +40,17 @@ const Login = () => {
 
         if (response.ok) {
           const data = await response.json();
-          localStorage.setItem("token", data.accessToken);
+          // Store the token in localStorage (or use cookies depending on your app)
+          localStorage.setItem("authToken", data.token);
+
           alert("Login Successful!");
-          navigate("/dashboard"); // Redirect to dashboard
+
+          // Redirect based on the user role
+          const userRole = data.user.role; // Assuming the role is returned with the user data
+          navigate(userRole === "tenant" ? "/tenant-dashboard" : "/owner-dashboard");
         } else {
-          alert("Login failed. Please check your credentials.");
+          const errorData = await response.json();
+          setErrors({ server: errorData.message || "Login failed. Please check your credentials." });
         }
       } catch (error) {
         console.error("Error during login:", error);
@@ -53,15 +63,21 @@ const Login = () => {
     <div
       className="flex justify-center items-center min-h-screen bg-cover bg-center"
       style={{
-        backgroundImage: "url('https://www.properties.market/in/blog/wp-content/uploads/2024/01/5-Most-Lavish-And-Expensive-Celebrity-Owned-Houses-In-Hyderabad-1200x900.png')", // Replace with your desired background image URL
+        backgroundImage:
+          "url('https://www.properties.market/in/blog/wp-content/uploads/2024/01/5-Most-Lavish-And-Expensive-Celebrity-Owned-Houses-In-Hyderabad-1200x900.png')", // Replace with your desired background image URL
       }}
     >
       <div className="bg-white bg-opacity-60 shadow-lg rounded-lg p-8 w-full max-w-md">
         <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">Login</h1>
+
+        {errors.server && <p className="text-center text-red-600">{errors.server}</p>}
+
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-800">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-800">
+              Email
+            </label>
             <input
               id="email"
               name="email"
@@ -77,7 +93,9 @@ const Login = () => {
 
           {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-800">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-800">
+              Password
+            </label>
             <div className="relative">
               <input
                 id="password"
@@ -100,7 +118,7 @@ const Login = () => {
             {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
           </div>
 
-          {/* Submit */}
+          {/* Submit Button */}
           <button
             type="submit"
             className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition"
@@ -111,10 +129,14 @@ const Login = () => {
 
         <p className="text-center text-gray-700 text-sm mt-4">
           Don’t have an account?{" "}
-          <a href="/register" className="text-red-800 hover:underline">Register here</a>
+          <a href="/register" className="text-red-800 hover:underline">
+            Register here
+          </a>
         </p>
         <p className="text-center text-gray-700 text-sm mt-2">
-          <a href="/forgot-password" className="text-red-800 hover:underline">Forgot your password?</a>
+          <a href="/forgot-password" className="text-red-800 hover:underline">
+            Forgot your password?
+          </a>
         </p>
       </div>
     </div>

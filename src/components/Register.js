@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Registration = () => {
   const [formData, setFormData] = useState({
@@ -11,14 +12,15 @@ const Registration = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false); // Added loading state
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Handle form input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Validate form before submitting
   const validateForm = () => {
     const newErrors = {};
     if (!formData.username.trim()) newErrors.username = "Username is required.";
@@ -39,104 +41,91 @@ const Registration = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      setLoading(true); // Start loading
-      setTimeout(() => {
-        // Simulate a successful registration and navigate based on role
-        if (formData.role === "tenant") {
-          navigate("/tenant-dashboard"); // Redirect to tenant dashboard
-        } else if (formData.role === "owner") {
-          navigate("/owner-dashboard"); // Redirect to owner dashboard
-        }
-        setLoading(false); // End loading
-      }, 1000); // Simulated delay
+    if (!validateForm()) return;
+  
+    console.log(formData); // Log the data to see if everything looks good
+  
+    setLoading(true);
+    try {
+      const response = await axios.post("http://localhost:5000/api/user/signup", formData);
+      alert(response.data.message); 
+  
+      // Redirect based on role
+      navigate("/login");
+    } catch (error) {
+      setErrors({ server: error.response?.data?.message || "Registration failed" });
+    } finally {
+      setLoading(false);
     }
   };
+  
 
   return (
-    <div
-      className="flex justify-center items-center min-h-screen bg-cover bg-center"
+    <div className="flex justify-center items-center min-h-screen bg-cover bg-center"
       style={{
-        backgroundImage:
-          "url('https://media.licdn.com/dms/image/D4D12AQGPsQ08Tyl0xg/article-cover_image-shrink_720_1280/0/1695716271828?e=2147483647&v=beta&t=0oSOx4huolYINCXiopg03E4O_p732SH8z7UPY7Uu9z4')", // Replace with your background image URL
+        backgroundImage: "url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzJm-cwiuUFpWwkW3LYuQb3AlpufJaPxdlKw&s')"
       }}
     >
       <div className="bg-white bg-opacity-30 shadow-lg rounded-lg p-8 w-full max-w-md">
         <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
           Create Your Account
         </h1>
+        
+        {errors.server && <p className="text-center text-red-600">{errors.server}</p>}
+
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           {/* Username Field */}
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-800">
-              Username
-            </label>
+            <label className="block text-sm font-medium text-gray-800">Username</label>
             <input
-              id="username"
               name="username"
               type="text"
               value={formData.username}
               onChange={handleChange}
-              className={`mt-1 block w-full p-2 border rounded-md ${
-                errors.username ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`mt-1 block w-full p-2 border rounded-md ${errors.username ? "border-red-500" : "border-gray-300"}`}
             />
             {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
           </div>
 
           {/* Name Field */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-800">
-              Name
-            </label>
+            <label className="block text-sm font-medium text-gray-800">Name</label>
             <input
-              id="name"
               name="name"
               type="text"
               value={formData.name}
               onChange={handleChange}
-              className={`mt-1 block w-full p-2 border rounded-md ${
-                errors.name ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`mt-1 block w-full p-2 border rounded-md ${errors.name ? "border-red-500" : "border-gray-300"}`}
             />
             {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
           </div>
 
           {/* Email Field */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-800">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-800">Email</label>
             <input
-              id="email"
               name="email"
               type="email"
               value={formData.email}
               onChange={handleChange}
-              className={`mt-1 block w-full p-2 border rounded-md ${
-                errors.email ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`mt-1 block w-full p-2 border rounded-md ${errors.email ? "border-red-500" : "border-gray-300"}`}
             />
             {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
           </div>
 
           {/* Password Field */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-800">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-gray-800">Password</label>
             <div className="relative">
               <input
-                id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleChange}
-                className={`mt-1 block w-full p-2 border rounded-md ${
-                  errors.password ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`mt-1 block w-full p-2 border rounded-md ${errors.password ? "border-red-500" : "border-gray-300"}`}
               />
               <button
                 type="button"
@@ -151,11 +140,8 @@ const Registration = () => {
 
           {/* Role Selection */}
           <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-800">
-              Role
-            </label>
+            <label className="block text-sm font-medium text-gray-800">Role</label>
             <select
-              id="role"
               name="role"
               value={formData.role}
               onChange={handleChange}
@@ -178,9 +164,7 @@ const Registration = () => {
 
         <p className="text-center text-gray-900 text-sm mt-4">
           Already have an account?{" "}
-          <a href="/login" className="text-red-900 hover:underline">
-            Login here
-          </a>
+          <a href="/login" className="text-red-900 hover:underline">Login here</a>
         </p>
       </div>
     </div>
